@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
@@ -27,6 +27,7 @@ import {
 import { User2, Mail, Hash, CircleCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import customers from "@/data/dummy.json"
+import { MapboxDirectionsResponse } from "@/lib/type"
 
 type Customer = {
   firstname: string;
@@ -54,15 +55,56 @@ export function BookingForm() {
   const pickUpOption = form.watch("pickUpOption");
   const dropOffOption = form.watch("dropOffOption");
 
-  React.useEffect(() => {
-    form.setValue("pickUpLocation", undefined as any);
+  useEffect(() => {
+    form.resetField("pickUpLocation");
   }, [pickUpOption]);
 
-  React.useEffect(() => {
-    form.setValue("dropOffLocation", undefined as any);
+  useEffect(() => {
+    form.resetField("dropOffLocation");
   }, [dropOffOption]);
 
-  const [matchedCustomer, setMatchedCustomer] = React.useState<Customer | null>(null);
+  const [matchedCustomer, setMatchedCustomer] = useState<Customer | null>(null);
+  const [travelInfo, setTravelInfo] = useState<MapboxDirectionsResponse | null>(null);
+  const [travelError, setTravelError] = useState<string | null>(null);
+
+  const pickUpLocation = form.watch("pickUpLocation");
+  const dropOffLocation = form.watch("dropOffLocation");
+
+  useEffect(() => {
+    if (!pickUpLocation?.value || !dropOffLocation?.value) {
+      setTravelInfo(null);
+      setTravelError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setTravelError(null);
+
+    const params = new URLSearchParams({
+      origin: pickUpLocation.value,
+      destination: dropOffLocation.value,
+    });
+
+    fetch(`/api/mapbox-distance?${params}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          setTravelInfo(null);
+          setTravelError(data.error);
+        } else {
+          setTravelInfo(data);
+          setTravelError(null);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setTravelInfo(null);
+          setTravelError("Failed to calculate distance");
+        }
+      });
+
+    return () => controller.abort();
+  }, [pickUpLocation?.value, dropOffLocation?.value]);
 
   const handlePhoneChange = (phone: string, fieldOnChange: (value: string) => void) => {
     fieldOnChange(phone);
@@ -86,7 +128,8 @@ export function BookingForm() {
   };
 
   function onSubmit(data: z.infer<typeof formBookingSchema>) {
-    const encoded = encodeURIComponent(JSON.stringify(data))
+    const payload = { ...data, travelInfo }
+    const encoded = encodeURIComponent(JSON.stringify(payload))
     router.push(`/booking/confirmation?data=${encoded}`)
   }
 

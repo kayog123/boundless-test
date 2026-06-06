@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { CircleCheck, MapPin, Plane, Calendar, Clock, User2, Mail, Phone, Users } from "lucide-react"
+import { CircleCheck, MapPin, Plane, Calendar, Clock, User2, Mail, Phone, Users, Route } from "lucide-react"
 import Link from "next/link"
 
 interface BookingData {
@@ -17,6 +17,12 @@ interface BookingData {
   email: string
   contactNumber: string
   passenger: number
+  travelInfo?: {
+    distance_m: number
+    duration_s: number
+    distance_km: number
+    duration_min: number
+  } | null
 }
 
 export function BookingConfirmation({ data }: { data: BookingData }) {
@@ -69,6 +75,29 @@ export function BookingConfirmation({ data }: { data: BookingData }) {
             </div>
           </div>
         </div>
+
+        {data.travelInfo && (
+          <div className="border-t pt-3 flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Route className="size-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {data.travelInfo.distance_km < 1
+                  ? `${data.travelInfo.distance_m.toLocaleString()} m`
+                  : `${data.travelInfo.distance_km.toLocaleString()} km`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {data.travelInfo.duration_min < 1
+                  ? `${Math.round(data.travelInfo.duration_s).toLocaleString()} sec`
+                  : data.travelInfo.duration_min >= 60
+                    ? `${Math.floor(data.travelInfo.duration_min / 60).toLocaleString()} hr ${Math.round(data.travelInfo.duration_min % 60).toLocaleString()} min`
+                    : `${Math.round(data.travelInfo.duration_min).toLocaleString()} min`}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3 border-t pt-3">
           <h3 className="text-sm font-semibold">Contact Information</h3>
