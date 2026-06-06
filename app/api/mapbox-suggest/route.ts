@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     q:             query,
     session_token: sessionToken,
     access_token:  MAPBOX_TOKEN,
-    types:         isAirport ? 'poi' : 'place,address',
+    types:         isAirport ? 'poi' : 'address,street,place,poi',
     limit:         '5',
     country:       'US',
     ...(isAirport && { poi_category: 'airport' }),

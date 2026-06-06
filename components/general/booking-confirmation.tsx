@@ -9,9 +9,9 @@ interface BookingData {
   reservationOption: string
   pickUpDatetime: string
   pickUpOption: string
-  pickUpLocation: { label: string; value: string }
+  pickUpLocation: { label: string; value: string; description?: string }
   dropOffOption: string
-  dropOffLocation: { label: string; value: string }
+  dropOffLocation: { label: string; value: string; description?: string }
   firstname: string
   lastname: string
   email: string
@@ -52,7 +52,9 @@ export function BookingConfirmation({ data }: { data: BookingData }) {
             {isAirportPickUp ? <Plane className="size-4 mt-0.5 text-muted-foreground" /> : <MapPin className="size-4 mt-0.5 text-muted-foreground" />}
             <div>
               <p className="text-sm">{data.pickUpLocation.label}</p>
-              <p className="text-xs text-muted-foreground capitalize">{data.pickUpOption}</p>
+              {data.pickUpLocation.description && (
+                <p className="text-xs text-muted-foreground">{data.pickUpLocation.description}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -71,7 +73,9 @@ export function BookingConfirmation({ data }: { data: BookingData }) {
             {isAirportDropOff ? <Plane className="size-4 mt-0.5 text-muted-foreground" /> : <MapPin className="size-4 mt-0.5 text-muted-foreground" />}
             <div>
               <p className="text-sm">{data.dropOffLocation.label}</p>
-              <p className="text-xs text-muted-foreground capitalize">{data.dropOffOption}</p>
+              {data.dropOffLocation.description && (
+                <p className="text-xs text-muted-foreground">{data.dropOffLocation.description}</p>
+              )}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format, setHours, setMinutes } from "date-fns"
+import { format, setHours, setMinutes, startOfDay, isToday, isBefore } from "date-fns"
 import { ChevronDownIcon } from "lucide-react"
 import z from "zod"
 import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
@@ -31,12 +31,19 @@ export function DateTimePicker({ field, fieldState, className }: DateTimePickerP
     ? format(selectedDate, "HH:mm")
     : "10:30";
 
+  const clampToNow = (date: Date) => {
+    if (isToday(date) && isBefore(date, new Date())) {
+      return new Date();
+    }
+    return date;
+  };
+
   const handleDateSelect = (day: Date | undefined) => {
     if (!day) return;
     const current = selectedDate ?? new Date();
     const hours = current.getHours();
     const minutes = current.getMinutes();
-    const merged = setMinutes(setHours(day, hours), minutes);
+    const merged = clampToNow(setMinutes(setHours(day, hours), minutes));
     field.onChange(merged);
     setOpen(false);
   };
@@ -44,9 +51,11 @@ export function DateTimePicker({ field, fieldState, className }: DateTimePickerP
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const [hours, minutes] = e.target.value.split(":").map(Number);
     const current = selectedDate ?? new Date();
-    const merged = setMinutes(setHours(current, hours), minutes);
+    const merged = clampToNow(setMinutes(setHours(current, hours), minutes));
     field.onChange(merged);
   };
+
+  const today = startOfDay(new Date())
 
   return (
     <FieldGroup className="max-w-md flex-row">
@@ -70,6 +79,7 @@ export function DateTimePicker({ field, fieldState, className }: DateTimePickerP
               captionLayout="dropdown"
               defaultMonth={selectedDate}
               onSelect={handleDateSelect}
+              disabled={{ before: today }}
             />
           </PopoverContent>
         </Popover>
@@ -80,6 +90,7 @@ export function DateTimePicker({ field, fieldState, className }: DateTimePickerP
           type="time"
           id="time-picker-optional"
           value={timeValue}
+          min={selectedDate && isToday(selectedDate) ? format(new Date(), "HH:mm") : undefined}
           onChange={handleTimeChange}
           className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
         />

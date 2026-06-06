@@ -11,7 +11,7 @@ const sessionToken = crypto.randomUUID();
 
 async function searchPlaces(query: string, locationType?: "airport" | "location"): Promise<MapboxSuggestion[]> {
   const params = new URLSearchParams({
-    q:             query,
+    q: query,
     session_token: sessionToken,
     ...(locationType && { location_type: locationType }),
   });
